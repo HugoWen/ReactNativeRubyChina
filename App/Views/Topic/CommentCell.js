@@ -31,12 +31,14 @@ var Style = StyleSheet.create({
 		color: '#356DD0'
 	},
 	info: {
+		fontSize: 12,
 		marginLeft: 5,
 		color: '#666666',
 	},
 	comment: {
 		fontSize: 12,
-		color: '#666666'
+		color: '#666666',
+		paddingTop: 5
 	},
 	avatar: {
 		width: 30,
@@ -46,31 +48,38 @@ var Style = StyleSheet.create({
 	},
 });
 
+var timeago = require('./timeago');
 
 module.exports = React.createClass({
 	render: function(){
 		var data = this.props.data;
+		var body = data.body_html.replace(/<\/?[^>]+>/g, '');
+
+    var avatar_url = data.user.avatar_url;
+    if(avatar_url.substr(0, 2) == '//'){
+      avatar_url = 'https:'+avatar_url;
+    }
 
 		return (
 			<View style={Style.container}>
 				<Image style={Style.avatar}
 					source={{
-						uri: data.user.avatar
+						uri: avatar_url
 					}} />
 
 				<View style={Style.content}>
 					<View style={Style.infobar}>
 						<Text style={Style.nickname}>
-							{data.user.nickname}
+							{data.user.name}
 						</Text>
 
 						<Text style={Style.info}>
-							{data.info}
+							{timeago(data.created_at)}
 						</Text>
 					</View>
 
 					<Text style={Style.comment}>
-						{data.comment}
+						{body}
 					</Text>
 				</View>
 

@@ -3,7 +3,27 @@ ReactNative iOS APP for RubyChina
 
 尝试用ReactNative写的iOS客户端
 
-API是通过[kimono](https://www.kimonolabs.com)抓取的（开发期间正好碰上RubyChina关闭了API）
+#### 步骤
+确保本地环境已安装`npm`
+
+运行 `npm install`
+
+然后打开xcode再编译
+
+
+
+#### 2015.11.19更新
+更新react-native版本，修复各种bug。
+暂不支持Android  = =!
+
+#### 2015.07.17更新
+
+API已切换到官方V3版API
+
+
+#### v0.1:
+
+旧版API是通过[kimono](https://www.kimonolabs.com)抓取的（开发期间正好碰上RubyChina关闭了API）
 
 ### 基本功能
 - 精选主题

@@ -25,7 +25,7 @@ var Style = React.StyleSheet.create({
 	},
 });
 
-
+var NODE_ID = 0;
 var CACHE = [];
 
 var TopicList = React.createClass({
@@ -34,9 +34,10 @@ var TopicList = React.createClass({
 			dataSource: new ListView.DataSource({
 				rowHasChanged: (r1, r2) => r1 !== r2
 			}),
-			loading: false,
 			loaded: false,
+      loadingPage: 0,
 			currentPage: 0,
+			end: false,
 		};
 	},
 	componentDidMount: function(){
@@ -48,39 +49,24 @@ var TopicList = React.createClass({
           }
 	},
 	fetchData: function(page){
-		//fake data
-		//var fake_json = require('../../Network/Fake/topics');
-		/*
-		if(this.state.currentPage == 1){
-			var fake_json = require('../../Network/Fake/topics_page');
-			console.log('fuck');
-		}else{
-			var fake_json = require('../../Network/Fake/topics');
-		}
-
-		this.cache(fake_json.results.collection1);
-		this.setState({
-				dataSource: this.state.dataSource.cloneWithRows(CACHE),
-				loaded: true,
-				currentPage: this.state.currentPage+1,
-				pageLoaded: true
-			});
-
-		var page = ""+this.state.currentPage;
-		console.log('current page '+page);
-		return true;
-		*/
-
 		console.log('loading page '+page+'...');
+    if(this.state.loadingPage == page)
+      return;
 
 		this.setState({
-			loading: true,
+			loaded: false,
+			loadingPage: page,
 		});
 
 		var node_id = this.props.data.id;
+		var limit = 50;
+		var offset = (page-1)*limit;
+		if(node_id != NODE_ID){
+			CACHE = [];
+		}
 
-		console.log(Api.NodeTopics(node_id, page));
-		fetch(Api.HomeTopics(page))
+		console.log(Api.NodeTopics(node_id, offset, limit));
+		fetch(Api.NodeTopics(node_id, offset, limit))
 		.then((response) => {
 			//console.log(response.json());
 			return response.json();
@@ -92,7 +78,13 @@ var TopicList = React.createClass({
 		    );
 		})
 		.then((responseData) => {
-			this.cache(responseData.results.collection1);
+      if(!responseData.topics){
+        this.setState({end: true});
+        return;
+      }
+
+			this.cache(responseData.topics);
+			NODE_ID = node_id;
 
 			console.log('loaded data, page'+page);
 
@@ -106,15 +98,16 @@ var TopicList = React.createClass({
 					dataSource: this.state.dataSource.cloneWithRows(CACHE),
 					loaded: true,
 					loading: false,
+          end: false,
 					currentPage: this.state.currentPage+1,
 				});
 			}
 		})
-		.done();
+    .done();
 	},
 
 	render: function(){
-		if(!this.state.loaded){
+		if(this.state.loadingPage == 1 && !this.state.loaded){
 			return (
 				<View style={Style.container}>
 					<ActivityIndicatorIOS color="#356DD0" style={{marginVertical: 30,marginBottom: 30}} />
@@ -125,17 +118,14 @@ var TopicList = React.createClass({
 	},
 
 	renderFooter: function() {
-	    if(!this.state.loading){
-	    	<View style={{marginVertical: 30}} ><Text>...</Text></View>
+	    if(this.state.loaded){
+	    	return <View style={{marginVertical: 30}} ><Text></Text></View>;
 	    }
 	    return <ActivityIndicatorIOS color="#356DD0"  style={{marginVertical: 30,marginBottom: 30}} />;
 	},
 
 	onEndReached: function() {
-		console.log('end reached...');
-		console.log(this.state.loading);
-		console.log(this.state.currentPage);
-	    if (this.state.loading) {
+	    if(this.state.end || !this.state.loaded) {
 	      return;
 	    }
 	    return this.fetchData(this.state.currentPage + 1);
@@ -164,11 +154,11 @@ var TopicList = React.createClass({
 					() => this.selectTopic(data)
 				}
 				data={data} />
-		); 
+		);
 	},
 	selectTopic: function(data){
 		this.props.navigator.push({
-			title: '详细' + (data.comment_count ? '（' + data.comment_count.toString() + '条回复）' : ''),
+			title: '详细' + (data.replies_count ? '（' + data.replies_count.toString() + '条回复）' : ''),
 			component: TopicView,
 			passProps: {
 				data: data

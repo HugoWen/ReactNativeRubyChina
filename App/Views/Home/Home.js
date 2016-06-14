@@ -34,8 +34,8 @@ var TopicList = React.createClass({
 			dataSource: new ListView.DataSource({
 				rowHasChanged: (r1, r2) => r1 !== r2
 			}),
-			loading: false,
 			loaded: false,
+			loadingPage: 0,
 			currentPage: 0,
 		};
 	},
@@ -48,37 +48,18 @@ var TopicList = React.createClass({
           }
 	},
 	fetchData: function(page){
-		//fake data
-		//var fake_json = require('../../Network/Fake/topics');
-		/*
-		if(this.state.currentPage == 1){
-			var fake_json = require('../../Network/Fake/topics_page');
-			console.log('fuck');
-		}else{
-			var fake_json = require('../../Network/Fake/topics');
-		}
-
-		this.cache(fake_json.results.collection1);
-		this.setState({
-				dataSource: this.state.dataSource.cloneWithRows(CACHE),
-				loaded: true,
-				currentPage: this.state.currentPage+1,
-				pageLoaded: true
-			});
-
-		var page = ""+this.state.currentPage;
-		console.log('current page '+page);
-		return true;
-		*/
-
 		console.log('loading page '+page+'...');
 
 		this.setState({
-			loading: true,
+			loaded: false,
+      loadingPage: page
 		});
 
-		console.log(Api.HomeTopics(page));
-		fetch(Api.HomeTopics(page))
+		var limit = 50;
+		var offset = (page-1)*limit;
+
+		console.log(Api.HomeTopics(offset, limit));
+		fetch(Api.HomeTopics(offset, limit))
 		.then((response) => {
 			//console.log(response.json());
 			return response.json();
@@ -90,7 +71,7 @@ var TopicList = React.createClass({
 		    );
 		})
 		.then((responseData) => {
-			this.cache(responseData.results.collection1);
+			this.cache(responseData.topics);
 
 			console.log('loaded data, page'+page);
 
@@ -103,7 +84,6 @@ var TopicList = React.createClass({
 				this.setState({
 					dataSource: this.state.dataSource.cloneWithRows(CACHE),
 					loaded: true,
-					loading: false,
 					currentPage: this.state.currentPage+1,
 				});
 			}
@@ -112,9 +92,9 @@ var TopicList = React.createClass({
 	},
 
 	render: function(){
-		if(!this.state.loaded){
+		if(this.state.loadingPage == 1 && !this.state.loaded){
 			return (
-				<View style={Style.container}>
+				<View style={{height: 50}}>
 					<ActivityIndicatorIOS color="#356DD0" style={{marginVertical: 30,marginBottom: 30}} />
 				</View>
 			);
@@ -123,17 +103,14 @@ var TopicList = React.createClass({
 	},
 
 	renderFooter: function() {
-	    if(!this.state.loading){
-	    	<View style={{marginVertical: 30}} ><Text>...</Text></View>
+	    if(this.state.loaded){
+	    	return <View style={{marginVertical: 30}} ><Text>...</Text></View>;
 	    }
 	    return <ActivityIndicatorIOS color="#356DD0"  style={{marginVertical: 30,marginBottom: 30}} />;
 	},
 
 	onEndReached: function() {
-		console.log('end reached...');
-		console.log(this.state.loading);
-		console.log(this.state.currentPage);
-	    if (this.state.loading) {
+	    if(!this.state.loaded) {
 	      return;
 	    }
 	    return this.fetchData(this.state.currentPage + 1);
@@ -162,11 +139,11 @@ var TopicList = React.createClass({
 					() => this.selectTopic(data)
 				}
 				data={data} />
-		); 
+		);
 	},
 	selectTopic: function(data){
 		this.props.navigator.push({
-			title: '详细' + (data.comment_count ? '（' + data.comment_count.toString() + '条回复）' : ''),
+			title: '详细' + (data.replies_count ? '（' + data.replies_count.toString() + '条回复）' : ''),
 			component: TopicView,
 			passProps: {
 				data: data

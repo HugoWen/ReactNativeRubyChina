@@ -45,8 +45,8 @@ module.exports = React.StyleSheet.create({
 
 	replyNumWrapper: {
 		width: 30,
-		marginLeft: 10,
-		marginRight: 0,
+		marginLeft: 8,
+		marginRight: 2,
 		justifyContent: 'center',
 		alignSelf: 'center',
 	},
@@ -67,5 +67,15 @@ module.exports = React.StyleSheet.create({
 	replyNumText: {
 		color: '#ffffff',
 		fontWeight: 'bold'
+	},
+	node_name: {
+		backgroundColor: '#f5f5f5',
+		color: '#778087',
+		marginRight: 5
+	},
+	user: {
+		color: '#666666',
+		marginRight: 5,
+		marginLeft: 5
 	}
 });
